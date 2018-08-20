@@ -24,7 +24,7 @@ GeneralSocket::~GeneralSocket()
 
 void GeneralSocket::asterSocketLogin()
 {
-    QString str = "Action: Login\r\nActionID: 0\r\nUsername: reader\r\nSecret: Gksjhd7865JhJL\r\n\r\n";
+    QString str =
     QByteArray asterRequestStr = str.toUtf8();
     asterSocket->write(asterRequestStr, asterRequestStr.size());
     QString queueStr = "Action: Events\r\nEventmask: call\r\n\r\n";
