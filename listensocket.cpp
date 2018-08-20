@@ -300,5 +300,6 @@ void ListenSocket::recInsertion(QString agent, QString callerPhoneTxt, QString c
             "VALUES(:user, :dateTime, :org, :query, :fio, :telephone, comment)";
     historyQuery.prepare(query);
     historyQuery.bindValue(":user", agent);
+    historyQuery.bindValue(":dateTime", dateTimeTxt);
 
 }
