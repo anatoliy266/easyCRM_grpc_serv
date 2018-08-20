@@ -17,7 +17,23 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         main.cpp \
-    generalserversocket.cpp
+    generalsocket.cpp \
+    listensocket.cpp \
+    listenworker.cpp \
+    databaseengine.cpp \
+    generalworker.cpp \
+    transportobject.cpp \
+    generalnskworker.cpp \
+    generalomskworker.cpp \
+    newconnectionworker.cpp
 
 HEADERS += \
-    generalserversocket.h
+    generalsocket.h \
+    listensocket.h \
+    listenworker.h \
+    databaseengine.h \
+    generalworker.h \
+    transportobject.h \
+    generalnskworker.h \
+    generalomskworker.h \
+    newconnectionworker.h
