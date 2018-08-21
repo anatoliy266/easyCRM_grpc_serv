@@ -294,12 +294,133 @@ void ListenSocket::checkPastRowCount(QByteArray arr, bool checkchanged, int rows
 
 void ListenSocket::recInsertion(QString agent, QString callerPhoneTxt, QString callerNameTxt, QString userNameTxt, QString dateTimeTxt, QString queryCombo, QString asterUnicID, QString comment)
 {
+    qDebug() << agent << "agent" << callerPhoneTxt << "phone" << callerNameTxt << "org" << userNameTxt << "fio" << dateTimeTxt << "datetime" << queryCombo << "query" << asterUnicID << "aster ID" << comment << "comment";
+
+
     db.open();
+    QSqlQuery dtQuery;
+    QString dtQ = "SELECT unixTime FROM time WHERE strTime IN (:dateTime)";
+    int dateTime;
+    QSqlRecord dtRec;
+    dtQuery.prepare(dtQ);
+    dtQuery.bindValue(":dateTime", dateTimeTxt);
+    if (dtQuery.exec())
+    {
+        while(dtQuery.next())
+        {
+            dtRec = dtQuery.record();
+        }
+    }
+    dateTime = dtRec.value(0).toInt();
+    qDebug() << "unixtime" << dateTime;
+
     QSqlQuery historyQuery;
     QString query = "INSERT INTO crm(user, dateTime, org, query, fio, telephone, comment)"
-            "VALUES(:user, :dateTime, :org, :query, :fio, :telephone, comment)";
+            "VALUES(:user, :dateTime, :org, :query, :fio, :telephone, :comment)";
+    int agentInt = agent.toInt();
+    qDebug() << "int agent" << agentInt;
+    qDebug() << query;
     historyQuery.prepare(query);
-    historyQuery.bindValue(":user", agent);
-    historyQuery.bindValue(":dateTime", dateTimeTxt);
+    historyQuery.bindValue(":user", agentInt);
+    historyQuery.bindValue(":dateTime", dateTime);
+    historyQuery.bindValue(":org", callerNameTxt);
+    historyQuery.bindValue(":query", queryCombo);
+    historyQuery.bindValue(":fio", userNameTxt);
+    historyQuery.bindValue(":telephone", callerPhoneTxt);
+    historyQuery.bindValue(":comment", comment);
+    bool histcheck = historyQuery.exec();
+    qDebug() << histcheck;
+    if (histcheck)
+    {
+        int asterUnicIDint = asterUnicID.toInt();
+        bool astCheck;
+        QSqlQuery asterDelQuery;
+        QString delQuery = "DELETE FROM asterCall WHERE asterUnicID IN (:asterUnicID)";
+        asterDelQuery.prepare(delQuery);
+        asterDelQuery.bindValue(":asterUnicID", asterUnicIDint);
+        astCheck = asterDelQuery.exec();
+        if (astCheck)
+            qDebug() << "sucess";
+        else
+            qDebug() << "error";
 
+
+        /*orgsPhones Insertion*/
+        QSqlQuery orgQuery;
+        QSqlQuery orgInQuery;
+        QString orgStr;
+        QString orgInStr;
+        QSqlRecord orgRec;
+        QList<QSqlRecord> orgRecList;
+        int orgPhone = callerPhoneTxt.toInt();
+
+        orgStr = "SELECT orgPhone FROM orgsPhones WHERE orgPhone = :orgPhone";
+        orgQuery.prepare(orgStr);
+        orgQuery.bindValue(":orgPhone", orgPhone);
+        if (orgQuery.exec())
+        {
+            while (orgQuery.next())
+            {
+                orgRec = orgQuery.record();
+                orgRecList.append(orgRec);
+            }
+        }
+        if (orgRecList.count() > 0)
+        {
+            orgInStr = "UPDATE orgsPhones SET orgName = :orgName, userName = :userName";
+            orgInQuery.prepare(orgInStr);
+            orgInQuery.bindValue(":orgName", callerNameTxt);
+            orgInQuery.bindValue(":userName", userNameTxt);
+        } else {
+            orgInStr = "INSERT INTO orgsPhones(orgPhone, orgName, userName)"
+                    "VALUES(:orgPhone, :orgName, :userName)";
+            orgInQuery.prepare(orgInStr);
+            orgInQuery.bindValue(":orgPhone", orgPhone);
+            orgInQuery.bindValue(":orgName", callerNameTxt);
+            orgInQuery.bindValue(":userName", userNameTxt);
+            orgInQuery.exec();
+        }
+
+        /*agentsPhones Insertion*/
+
+        QSqlQuery agentQuery;
+        QSqlQuery agentInQuery;
+        QString agentStr;
+        QString agentInStr;
+        QSqlRecord agentRec;
+        QList<QSqlRecord> agentRecList;
+        int agentPhone = callerPhoneTxt.toInt();
+        qDebug() << agentPhone << " agent phone";
+
+        agentStr = "SELECT agentPhone FROM agentPhones WHERE agentPhone = :orgPhone";
+        agentQuery.prepare(agentStr);
+        agentQuery.bindValue(":orgPhone", agentPhone);
+        if (agentQuery.exec())
+        {
+            while (agentQuery.next())
+            {
+                agentRec = agentQuery.record();
+                agentRecList.append(agentRec);
+            }
+        }
+        qDebug() << agentRecList.count() << "agent rec list count";
+        if (agentRecList.count() > 0)
+        {
+            agentInStr = "UPDATE agentPhones SET agentsName = :orgName, userName = :userName";
+            qDebug() << callerNameTxt << "caller name" << userNameTxt << "user name";
+            agentInQuery.prepare(agentInStr);
+            agentInQuery.bindValue(":orgName", callerNameTxt);
+            agentInQuery.bindValue(":userName", userNameTxt);
+        } else {
+            agentInStr = "INSERT INTO agentPhones(agentPhone, agentsName, userName)"
+                    "VALUES(:orgPhone, :orgName, :userName)";
+            agentInQuery.prepare(agentInStr);
+            qDebug() << agentPhone << "agent phone" << callerNameTxt << "caller name" << userNameTxt << "username";
+            agentInQuery.bindValue(":orgPhone", agentPhone);
+            agentInQuery.bindValue(":orgName", callerNameTxt);
+            agentInQuery.bindValue(":userName", userNameTxt);
+            agentInQuery.exec();
+        }
+    }
+    db.close();
 }

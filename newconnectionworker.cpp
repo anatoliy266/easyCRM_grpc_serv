@@ -26,7 +26,16 @@ void NewConnectionWorker::listenRead()
         QString queryCombo = str.split("/r/n").value(6);
         QString asterUnicID = str.split("/r/n").value(7);
         QString comment = str.split("/r/n").value(8);
-
+        qDebug() << id;
+        qDebug() << agent;
+        qDebug() << callerNameTxt;
+        qDebug() << callerPhoneTxt;
+        qDebug() << userNameTxt;
+        qDebug() << dateTimeTxt;
+        qDebug() << queryCombo;
+        qDebug() << asterUnicID;
+        qDebug() << comment;
+        qDebug() << "properties to insert get!";
         emit recInsertion(agent, callerPhoneTxt, callerNameTxt, userNameTxt, dateTimeTxt, queryCombo, asterUnicID, comment);
     } else {
         int id = QString(str.split("/r/n").value(0)).toInt();
