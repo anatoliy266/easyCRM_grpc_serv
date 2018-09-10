@@ -33,7 +33,8 @@ void GeneralSocket::asterSocketLogin()
 }
 
 void GeneralSocket::asterSocketRead()
-{  
+{
+    //qDebug() << "READY READ" << callerIDNumList << "callerIDNUMLIST ";
     QString returnStr = QString::fromUtf8(asterSocket->readAll());
     QStringList returnStrList = returnStr.split("\r\n");
     if (returnStrList.value(0) == "Event: Newstate" || returnStrList.value(0) == "Event: Dial")
@@ -146,11 +147,15 @@ void GeneralSocket::setAsterHost(QString hostName)
         callerIDNumList.append("CallerIDNum: 140");
         callerIDNumList.append("CallerIDNum: 142");
         callerIDNumList.append("CallerIDNum: 154");
+        callerIDNumList.append("CallerIDNum: 163");
+        callerIDNumList.append("CallerIDNum: 136");
         connectedLineNumList.append("ConnectedLineNum: 123");
         connectedLineNumList.append("ConnectedLineNum: 129");
         connectedLineNumList.append("ConnectedLineNum: 140");
         connectedLineNumList.append("ConnectedLineNum: 142");
         connectedLineNumList.append("ConnectedLineNum: 154");
+        connectedLineNumList.append("ConnectedLineNum: 163");
+        connectedLineNumList.append("ConnectedLineNum: 136");
         break;
     }
     case 1: {

@@ -5,7 +5,7 @@ DataBaseEngine::DataBaseEngine(QObject* parent, QSqlDatabase db): QSqlRelational
 {
     //emit generateModel();
     connect(this, SIGNAL(update()), this, SLOT(updateModel()));
-    connect(this, SIGNAL(dataChanged(bool,int)), this, SLOT(setToClient(bool,int)));
+    connect(this, SIGNAL(dataChanged(bool,int,QString)), this, SLOT(setToClient(bool,int,QString)));
 
 }
 
@@ -55,7 +55,7 @@ void DataBaseEngine::updateModel()
     }
 }
 
-void DataBaseEngine::dBProceed(int id, QString tablename, QString filter)
+void DataBaseEngine::dBProceed(int id, QString tablename, QString userName, QString filter)
 {
     this->setTable(tablename);
     QStringList tablesList;
@@ -65,6 +65,7 @@ void DataBaseEngine::dBProceed(int id, QString tablename, QString filter)
     tablesList.append("query_type");
     tablesList.append("time");
     tablesList.append("users");
+
     switch (tablesList.indexOf(tablename)) {
     case 0: {
         this->setRelation(2, QSqlRelation("orgsPhones", "orgPhone", "orgName"));
@@ -74,15 +75,8 @@ void DataBaseEngine::dBProceed(int id, QString tablename, QString filter)
         emit update();
         this->setFilter(filter);
         emit update();
-        if (asterPastRowCount != this->rowCount() || asterPastColCount != this->columnCount())
-        {
 
-            asterPastRowCount = this->rowCount();
-            asterPastColCount = this->columnCount();
-            emit dataChanged(true, id);
-        } else {
-            emit dataChanged(false, id);
-        }
+        emit dataChanged(true, id, userName);
         break;
     }
 
@@ -92,24 +86,20 @@ void DataBaseEngine::dBProceed(int id, QString tablename, QString filter)
         this->setRelation(2, QSqlRelation("time", "unixTime", "strTime"));
         this->setFilter(filter);
         emit update();
-        if (crmPastRowCount != this->rowCount() || crmPastColCount != this->columnCount())
-        {
 
-            crmPastRowCount = this->rowCount();
-            crmPastColCount = this->columnCount();
-            emit dataChanged(true, id);
-        } else {
-            emit dataChanged(false, id);
-        }
+        emit dataChanged(true, id, userName);
         break;
     }
 
     case 2: {
+        this->setFilter(filter);
+        emit update();
+        emit dataChanged(true, id, userName);
         break;
     }
     case 3: {
         emit update();
-        emit dataChanged(true, id);
+        emit dataChanged(true, id, userName);
         break;
     }
     case 4: {
@@ -118,32 +108,17 @@ void DataBaseEngine::dBProceed(int id, QString tablename, QString filter)
     case 5: {
         this->setFilter(filter);
         emit update();
-        if (userPastRowCount != this->rowCount() || userPastColCount != this->columnCount())
-        {
-            crmPastRowCount = 0;
-            crmPastColCount = 0;
-            asterPastRowCount = 0;
-            asterPastColCount = 0;
-
-            userPastRowCount = this->rowCount();
-            userPastColCount = this->columnCount();
-            emit dataChanged(true, id);
-        } else {
-            crmPastRowCount = 0;
-            crmPastColCount = 0;
-            asterPastRowCount = 0;
-            asterPastColCount = 0;
-            emit dataChanged(true, id);
-        }
+        emit dataChanged(true, id, userName);
         break;
     }
     }
 }
 
-void DataBaseEngine::setToClient(bool checkShanged, int id)
+void DataBaseEngine::setToClient(bool checkShanged, int id, QString userName)
 {
     if (checkShanged)
     {
+        qDebug() << this->rowCount() << " rows " << this->columnCount() << " cols";
         QByteArray tVals;
         QDataStream out(&tVals, QIODevice::ReadWrite);
         out << quint8(0);
@@ -163,8 +138,6 @@ void DataBaseEngine::setToClient(bool checkShanged, int id)
         out.device()->seek(0);
         out << quint8(tVals.size()-sizeof(quint8));
 
-        emit dbData(tVals, checkShanged, this->rowCount(), this->columnCount(), this->tableName());
+        emit dbData(tVals, checkShanged, this->rowCount(), this->columnCount(), this->tableName(), userName);
     }
 }
-
-
