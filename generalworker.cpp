@@ -3,8 +3,8 @@
 GeneralWorker::GeneralWorker(QObject *parent): QObject(parent)
 {
     ks = new KerioStream();
-    ks->connectToHost("ats.550550.ru", 4021, "/admin/api/jsonrpc/");
-    token = ks->authorization("a.stanevich", "256532FdnjvfN73501505", "quickCRMserv", "King Anthony", "1.1");
+    ks->connectToHost("some", 4021, "/admin/api/jsonrpc/");
+    token = ks->authorization("some", "some", "quickCRMserv", "King Anthony", "1.1");
 }
 
 GeneralWorker::~GeneralWorker()
