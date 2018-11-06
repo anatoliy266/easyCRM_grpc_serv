@@ -16,8 +16,10 @@
 #include <QList>
 #include <QVariant>
 
-#include "databaseengine.h"
+//#include "databaseengine.h"
 #include "newconnectionworker.h"
+#include "generalworker.h"
+#include "listenserver.h"
 
 class ListenSocket: public QObject
 {
@@ -26,28 +28,16 @@ public:
     explicit ListenSocket(QObject* parent = nullptr);
     ~ListenSocket();
     void runListenServer();
-    void stopListenServer();
+    void runKerioWorker();
 signals:
-    void update();
-    void setDBEngine(DataBaseEngine* dbengine);
-    void setToClient(QByteArray data, bool check);
+    void setSocketHandler(qintptr socketDescriptor);
 public slots:
-    void newListenConnection();
-    void listenRead();
-    void listenReadEnd();
-    void getAsterRec(QString query, quint64 callerPhone, quint64 callerName, quint64 agentPhone, quint64 agentName, quint64 dateTime, quint64 asterUnicID, QString asterChannelState, QString strDT);
-    void recInsertion(QString agent, QString callerPhoneTxt, QString callerNameTxt, QString userNameTxt, QString dateTimeTxt, QString queryCombo, QString asterUnicID, QString comment);
-    void inLineInsertion(QString agent, QString tableName, QString val);
+    void newIncomingConnection(qintptr socketDescriptor);
+    //void newListenConnection();
 private slots:
 
 private:
-    QTcpServer* listenServer;
-    QSqlDatabase db;
-    DataBaseEngine* dbEngine;
-    QMap<int, QVariant> asterPastRows;
-    QMap<int, QVariant> asterPastCols;
-    QMap<int, QVariant> crmPastRows;
-    QMap<int, QVariant> crmPastCols;
+    //QTcpServer* listenServer;
 };
 
 #endif // LISTENSOCKET_H

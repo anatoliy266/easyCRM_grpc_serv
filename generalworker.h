@@ -2,8 +2,30 @@
 #define GENERALWORKER_H
 
 #include <QObject>
-#include "generalsocket.h"
+#include <QTcpSocket>
+#include <QDataStream>
+#include <QByteArray>
 #include <QDebug>
+#include <QString>
+#include <QThread>
+#include <QTimer>
+#include <QVariant>
+
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QSqlField>
+#include <QSqlRecord>
+#include <QSqlRelationalTableModel>
+
+#include <QFile>
+#include <QDateTime>
+#include <QLibrary>
+
+#include <stdlib.h>
+#include <iostream>
+#include <stdio.h>
+
+#include <keriostream.h>
 
 class GeneralWorker: public QObject
 {
@@ -11,14 +33,29 @@ class GeneralWorker: public QObject
 public:
     explicit GeneralWorker(QObject* parent = nullptr);
     ~GeneralWorker();
+    QSqlDatabase *prepareDBConnection();
+    QStringList agentsList();
+    bool checkForExitingRec(QString query);
+    bool execute(QString query);
+    QVariant returnUnicue(QString table, QString field, QString filter);
+
 signals:
-    void setAsterRec(QString query, quint64 callerphone, quint64 callername, quint64 agentphone, quint64 agentname, quint64 datetime, quint64 asterunicID, QString asterchannelState, QString strDT);
+    void setReadData(QByteArray readData);
+    void setAsterRec(QList<QVariant> callList);
+    void setInLineUpdate(QList<QVariant> queueList);
+
 public slots:
-    void getAsterRec(QString query, quint64 callerPhone, quint64 callerName, quint64 agentPhone, quint64 agentName, quint64 dateTime, quint64 asterUnicID, QString asterChannelState, QString strDT);
-    void createGeneralSocket();
+    void read();
+    void getAsterRec(QList<QVariant> callList);
+    void getInLineUpdate(QList<QVariant> queueList);
+    void start();
 private:
-    GeneralSocket* genSock;
-    int phone;
+
+    KerioStream* ks;
+    QTimer *tmr;
+    QString token;
+    int separator = 1;
+
 };
 
 #endif // GENERALWORKER_H

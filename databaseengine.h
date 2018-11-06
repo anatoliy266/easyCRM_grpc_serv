@@ -11,37 +11,34 @@
 #include <QSqlRelationalTableModel>
 #include <QStringList>
 #include <QString>
+#include <QVariant>
+#include <QHash>
+#include <QMap>
 
 class DataBaseEngine: public QSqlRelationalTableModel
 {
     Q_OBJECT
 
 public:
-    explicit DataBaseEngine(QObject* parent = nullptr, QSqlDatabase db = QSqlDatabase());
+    explicit DataBaseEngine(QObject* parent = nullptr, QSqlDatabase* db = new QSqlDatabase());
     ~DataBaseEngine();
     bool select();
     QHash<int, QByteArray> roleNames() const {return role_names;}
     QVariant data(const QModelIndex &item, int role) const;
-signals:
-    void generateModel();
-    void update();
-    void dataChanged(bool checkChanged, int id, QString userName);
-    void dbData(QByteArray arr, bool checkchanged, int rowsCount, int colsCount, QString table, QString userName);
-public slots:
-    void dBProceed(int id, QString tablename, QString userName, QString filter);
-    void setToClient(bool checkShanged, int id, QString userName);
+    bool setTablesList(QStringList tables);
 
-private slots:
+    int _rows() {return this->rowCount();}
+    int _cols() {return this->columnCount();}
+signals:
+    void upd();
+public slots:
     void updateModel();
+    QByteArray dBProceed(int id, QString tablename, QString filter);
 private:
     void generateRoleNames();
     QHash<int, QByteArray> role_names;
-    int userPastRowCount;
-    int userPastColCount;
-    int crmPastRowCount;
-    int crmPastColCount;
-    int asterPastRowCount;
-    int asterPastColCount;
+    QStringList tablesList;
+
     QList<QVariant> asterPast;
     QList<QVariant> crmPast;
 

@@ -1,7 +1,7 @@
 QT -= gui
 QT += core sql network
 
-CONFIG += c++11 console
+CONFIG += c++17 console
 CONFIG -= app_bundle
 
 # The following define makes your compiler emit warnings if you use
@@ -14,26 +14,40 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+INCLUDEPATH += $$PWD/libs $$PWD/include $$PWD/bin
+win32:LIBS += -lsetupapi
+win32:LIBS += -lwsock32
+win32:LIBS += -lws2_32
+LIBS += -L$$PWD/libs -llibcurl.dll
+win32:DEFINES += _WIN32_WINNT=0x0501
+
 
 SOURCES += \
         main.cpp \
-    generalsocket.cpp \
     listensocket.cpp \
     listenworker.cpp \
     databaseengine.cpp \
     generalworker.cpp \
-    transportobject.cpp \
-    generalnskworker.cpp \
-    generalomskworker.cpp \
-    newconnectionworker.cpp
+    newconnectionworker.cpp \
+    keriostream.cpp \
+    keriocurlcore.cpp \
+    jsonrpcengine.cpp \
+    listenserver.cpp
+
+# Default rules for deployment.
+qnx: target.path = /tmp/$${TARGET}/bin
+else: unix:!android: target.path = /opt/$${TARGET}/bin
+!isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
-    generalsocket.h \
     listensocket.h \
     listenworker.h \
     databaseengine.h \
     generalworker.h \
-    transportobject.h \
-    generalnskworker.h \
-    generalomskworker.h \
-    newconnectionworker.h
+    newconnectionworker.h \
+    keriostream.h \
+    keriocurlcore.h \
+    jsonrpcengine.h \
+    jsonrpcparams.h \
+    params.h \
+    listenserver.h

@@ -6,6 +6,8 @@
 
 #include "databaseengine.h"
 
+#include "params.h"
+
 #include <QObject>
 #include <QDataStream>
 #include <QByteArray>
@@ -19,6 +21,27 @@
 #include <QSqlRelationalTableModel>
 #include <QList>
 #include <QVariant>
+#include <QEventLoop>
+#include <QEvent>
+#include <QIODevice>
+#include <QAbstractSocket>
+
+enum DataMethod {
+    getHistory,
+    getCalls,
+    getQuery,
+    getUsers,
+    getOrgs
+};
+
+typedef struct DataStruct {
+    QString _table;
+    int _rows;
+    int _cols;
+    QString _query;
+    DataMethod method;
+} dStruct;
+
 
 class NewConnectionWorker: public QObject
 {
@@ -26,31 +49,13 @@ class NewConnectionWorker: public QObject
 public:
     explicit NewConnectionWorker(QObject* parent = nullptr);
     ~NewConnectionWorker();
-    void getSocketDesc(QObject *obj);
+    QSqlDatabase *prepareDBConnection();
 signals:
-    void success();
-    void sucess();
-    void update();
-    void dbRoles(QString table, int id);
-    void dbProperty(int id, QString table, QString user, QString filter);
-    void pastSafe(QMap<int, QVariant> PastRows, QMap<int, QVariant> PastCols, QString table);
-    void recInsertion(QString agent, QString callerPhoneTxt, QString callerNameTxt, QString userNameTxt, QString dateTimeTxt, QString queryCombo, QString asterUnicID, QString comment);
-    void getPastBuffer(QMap<int, QVariant> aPastRows, QMap<int, QVariant> aPastCols, QMap<int, QVariant> cPastRows, QMap<int, QVariant> cPastCols);
-    void inLineInsertion(QString agent, QString tableName, QString val);
 public slots:
+    void newIncomingConnection(qintptr socketDescriptor);
     void listenRead();
-    void setToClient(QByteArray arr, bool checkchanged, int rowsCount, int colsCount, QString table, QString userName);
-    void sucessProceed();
-
 private:
-    QTcpSocket* newConSock;
-    QTcpSocket* writeSock;
-    QMap<int, QVariant> asterPastRows;
-    QMap<int, QVariant> asterPastCols;
-    QMap<int, QVariant> crmPastRows;
-    QMap<int, QVariant> crmPastCols;
-    QMap<int, QVariant> orgPastRows;
-    QMap<int, QVariant> orgPastCols;
+
 
 };
 

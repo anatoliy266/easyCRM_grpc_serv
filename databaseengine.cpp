@@ -1,12 +1,9 @@
 #include "databaseengine.h"
 #include <QDebug>
 
-DataBaseEngine::DataBaseEngine(QObject* parent, QSqlDatabase db): QSqlRelationalTableModel(parent, db)
+DataBaseEngine::DataBaseEngine(QObject* parent, QSqlDatabase *db): QSqlRelationalTableModel(parent, *db)
 {
-    //emit generateModel();
-    connect(this, SIGNAL(update()), this, SLOT(updateModel()));
-    connect(this, SIGNAL(dataChanged(bool,int,QString)), this, SLOT(setToClient(bool,int,QString)));
-
+    connect(this, SIGNAL(upd()), this, SLOT(updateModel()));
 }
 
 DataBaseEngine::~DataBaseEngine()
@@ -48,96 +45,75 @@ QVariant DataBaseEngine::data(const QModelIndex &item, int role) const
 
 void DataBaseEngine::updateModel()
 {
+
     this->select();
     while(this->canFetchMore())
     {
         this->fetchMore();
     }
+    this->generateRoleNames();
+
+//    qDebug() << this->rowCount() << "prepared rowcount";
 }
 
-void DataBaseEngine::dBProceed(int id, QString tablename, QString userName, QString filter)
+bool DataBaseEngine::setTablesList(QStringList tables)
 {
+    tablesList.clear();
+    tablesList = tables;
+    return true;
+}
+
+QByteArray DataBaseEngine::dBProceed(int id, QString tablename, QString filter)
+{
+    QByteArray result;
     this->setTable(tablename);
-    QStringList tablesList;
-    tablesList.append("asterCall");
-    tablesList.append("crm");
-    tablesList.append("orgsPhones");
-    tablesList.append("query_type");
-    tablesList.append("time");
-    tablesList.append("users");
-
-    switch (tablesList.indexOf(tablename)) {
-    case 0: {
-        this->setRelation(2, QSqlRelation("orgsPhones", "orgPhone", "orgName"));
-        this->setRelation(4, QSqlRelation("agentPhones", "agentPhone", "agentsName"));
-        this->setRelation(5, QSqlRelation("time", "unixTime", "strTime"));
-        //this->setFilter(filter);
-        emit update();
+    emit upd();
+//    qDebug() << "listen socket: Database engine: rowCount before setting filter: " << rowCount();
+    if (filter != "")
         this->setFilter(filter);
-        emit update();
-
-        emit dataChanged(true, id, userName);
-        break;
-    }
-
-    case 1: {
-
+    emit upd();
+//    qDebug() << "listen socket: Database engine: rowCount after setting filter: " << rowCount();
+    if (this->tableName() == "crm")
+    {
+        this->setFilter(filter);
         this->setRelation(1, QSqlRelation("users", "id_user", "user"));
         this->setRelation(2, QSqlRelation("time", "unixTime", "strTime"));
-        this->setFilter(filter);
-        emit update();
-
-        emit dataChanged(true, id, userName);
-        break;
-    }
-
-    case 2: {
-        this->setFilter(filter);
-        emit update();
-        emit dataChanged(true, id, userName);
-        break;
-    }
-    case 3: {
-        emit update();
-        emit dataChanged(true, id, userName);
-        break;
-    }
-    case 4: {
-        break;
-    }
-    case 5: {
-        this->setFilter(filter);
-        emit update();
-        emit dataChanged(true, id, userName);
-        break;
-    }
-    }
-}
-
-void DataBaseEngine::setToClient(bool checkShanged, int id, QString userName)
-{
-    if (checkShanged)
-    {
-        qDebug() << this->rowCount() << " rows " << this->columnCount() << " cols";
-        QByteArray tVals;
-        QDataStream out(&tVals, QIODevice::ReadWrite);
-        out << quint8(0);
-        out << id;
-        out << this->roleNames();
-        out << this->rowCount();
-        out << this->columnCount();
-        QVariant data;
-        for (int i = 0; i< this->rowCount(); i++)
+        emit upd();
+    } else {
+        if (this->tableName() == "asterCall")
         {
-            for (int j = 0; j< this->columnCount(); j++)
-            {
-                data = this->data(this->index(i, j), Qt::DisplayRole);
-                out << data;
-            }
-        }
-        out.device()->seek(0);
-        out << quint8(tVals.size()-sizeof(quint8));
 
-        emit dbData(tVals, checkShanged, this->rowCount(), this->columnCount(), this->tableName(), userName);
+            this->setRelation(2, QSqlRelation("orgsPhones", "orgPhone", "orgName"));
+            this->setRelation(4, QSqlRelation("agentPhones", "agentPhone", "agentsName"));
+            this->setRelation(5, QSqlRelation("time", "unixTime", "strTime"));
+            emit upd();
+//            qDebug() << "listen socket: Database engine: rowCount after setting relations: " << rowCount();
+        } else {
+            emit upd();
+        }
     }
+
+
+
+
+    //prepare result
+    QDataStream out(&result, QIODevice::ReadWrite);
+    out << quint8(0);
+    out << id;
+    out << this->rowCount();
+    out << this->columnCount();
+    QVariant data;
+    for (int i = 0; i< this->rowCount(); i++)
+    {
+        for (int j = 0; j< this->columnCount(); j++)
+        {
+            data = this->data(this->index(i, j), Qt::DisplayRole);
+            out << data;
+        }
+    }
+    out.device()->seek(0);
+    out << quint8(result.size()-sizeof(quint8));
+
+    return result;
 }
+
